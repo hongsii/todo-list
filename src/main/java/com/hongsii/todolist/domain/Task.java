@@ -1,5 +1,7 @@
 package com.hongsii.todolist.domain;
 
+import com.hongsii.todolist.exception.AlreadyCompletedTaskException;
+import com.hongsii.todolist.exception.CannotCompleteTaskException;
 import com.hongsii.todolist.exception.DuplicateRelatedTaskException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +19,6 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Singular;
 import lombok.ToString;
 
 @Entity
@@ -36,19 +37,26 @@ public class Task extends BaseEntity {
 	private String content;
 
 	@ManyToMany
-	@JoinTable(name = "related_task",
+	@JoinTable(name = "task_relation",
 			joinColumns = {
-			@JoinColumn(name = "task_id", referencedColumnName = "id", nullable = false)},
+					@JoinColumn(name = "task_id", referencedColumnName = "id", nullable = false)},
 			inverseJoinColumns = {
-			@JoinColumn(name = "related_task_id", referencedColumnName = "id", nullable = false)})
-	@Singular
+					@JoinColumn(name = "related_task_id", referencedColumnName = "id", nullable = false)})
 	private List<Task> relatedTasks;
 
+	@ManyToMany(mappedBy = "relatedTasks")
+	private List<Task> relatedByTasks;
+
+	@Column
+	private boolean isCompleted;
+
 	@Builder
-	public Task(Long id, String content, List<Task> relatedTasks) {
+	public Task(Long id, String content, List<Task> relatedTasks, List<Task> relatedByTasks, boolean isCompleted) {
 		this.id = id;
 		this.content = content;
 		this.relatedTasks = (relatedTasks != null) ? relatedTasks:new ArrayList<>();
+		this.relatedByTasks = (relatedByTasks != null) ? relatedByTasks:new ArrayList<>();
+		this.isCompleted = isCompleted;
 	}
 
 	public void addRelatedTask(Task relatedTask) {
@@ -56,5 +64,22 @@ public class Task extends BaseEntity {
 			throw new DuplicateRelatedTaskException();
 		}
 		relatedTasks.add(relatedTask);
+	}
+
+	public boolean isAllCompletedRelatedTask() {
+		long completedRelatedTaskCount = relatedByTasks.stream()
+				.filter(Task::isCompleted)
+				.count();
+		return relatedByTasks.size() == completedRelatedTaskCount;
+	}
+
+	public boolean complete() {
+		if (isCompleted) {
+			throw new AlreadyCompletedTaskException("이미 완료된 작업입니다.");
+		}
+		if (!isAllCompletedRelatedTask()) {
+			throw new CannotCompleteTaskException("참조 중인 작업이 완료되지 않았습니다.");
+		}
+		return isCompleted = true;
 	}
 }

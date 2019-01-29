@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -122,6 +123,16 @@ public class TaskApiControllerTest {
 
 		result.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data.task.id").value(3))
+				.andDo(print());
+	}
+
+	@Test
+	public void complete() throws Exception {
+		given(taskService.complete(any(Long.class))).willReturn(true);
+
+		ResultActions result = mockMvc.perform(patch("/api/tasks/3/complete"));
+
+		result.andExpect(status().isOk())
 				.andDo(print());
 	}
 }

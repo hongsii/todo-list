@@ -4,7 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hongsii.todolist.domain.Task;
-import com.hongsii.todolist.exception.NotFoundRelatedTaskException;
+import com.hongsii.todolist.exception.CannotCompleteTaskException;
 import com.hongsii.todolist.exception.NotFoundTaskException;
 import com.hongsii.todolist.repository.TaskRepository;
 import com.hongsii.todolist.service.dto.TaskDto;
@@ -28,17 +28,21 @@ public class TaskServiceTest {
 	@Autowired
 	private TaskRepository taskRepository;
 
-	private int DEFAULT_ENTITY_COUNT = 4;
+	/* Default test target */
 	private List<Task> savedTasks;
+	private Task CHORE;
+	private Task LAUNDRY;
+	private Task CLEANING;
+	private Task CLEANING_ROOM;
 
 	@Before
 	public void setUp() throws Exception {
-		Task chore = taskRepository.save(Task.builder().content("집안일").build());
-		Task laundry = taskRepository.save(Task.builder().content("빨래").relatedTasks(asList(chore)).build());
-		Task cleaning = taskRepository.save(Task.builder().content("청소").relatedTasks(asList(chore)).build());
-		Task cleaningRoom = taskRepository.save(Task.builder().content("방청소").relatedTasks(asList(chore, cleaning)).build());
-		savedTasks = taskRepository.findAll();
-		DEFAULT_ENTITY_COUNT = savedTasks.size();
+		CHORE = taskRepository.save(Task.builder().content("집안일").build());
+		LAUNDRY = taskRepository.save(Task.builder().content("빨래").relatedTasks(asList(CHORE)).build());
+		CLEANING = taskRepository.save(Task.builder().content("청소").relatedTasks(asList(CHORE)).build());
+		CLEANING_ROOM = taskRepository.save(Task.builder().content("방청소").relatedTasks(asList(
+				CHORE, CLEANING)).build());
+		savedTasks = asList(CHORE, LAUNDRY, CLEANING, CLEANING_ROOM);
 	}
 
 	@After
@@ -54,24 +58,24 @@ public class TaskServiceTest {
 		TaskDto.Response created = taskService.create(request);
 
 		assertThat(created.getId()).isNotNull();
-		assertThat(taskRepository.count()).isEqualTo(DEFAULT_ENTITY_COUNT + 1);
+		assertThat(taskRepository.count()).isEqualTo(savedTasks.size() + 1);
 	}
 
 	@Test
 	public void createWithRelatedTask() {
 		TaskDto.Create request = new TaskDto.Create();
 		request.setContent("설거지");
-		Long relatedId1 = savedTasks.get(0).getId(), relatedId2 = savedTasks.get(1).getId();
+		Long relatedId1 = CHORE.getId(), relatedId2 = LAUNDRY.getId();
 		request.setRelatedTaskIds(asList(relatedId1, relatedId2));
 
 		TaskDto.Response created = taskService.create(request);
 
 		assertThat(created.getId()).isNotNull();
 		assertThat(created.getRelatedTaskIds()).hasSize(2).isEqualTo(request.getRelatedTaskIds());
-		assertThat(taskRepository.count()).isEqualTo(DEFAULT_ENTITY_COUNT + 1);
+		assertThat(taskRepository.count()).isEqualTo(savedTasks.size() + 1);
 	}
 
-	@Test(expected = NotFoundRelatedTaskException.class)
+	@Test(expected = NotFoundTaskException.class)
 	public void createExceptionWhenRelatedTaskNotExists() {
 		TaskDto.Create request = new TaskDto.Create();
 		request.setContent("설거지");
@@ -82,15 +86,17 @@ public class TaskServiceTest {
 
 	@Test
 	public void findAllByPageable() {
-		int lastPage = 2;
-		Page<TaskDto.Response> savedTasks = taskService.findAll(PageRequest.of(lastPage - 1, 2));
+		int halfOfSavedTasks = (int) Math.ceil(savedTasks.size() / 2);
+		PageRequest pageRequest = PageRequest.of(halfOfSavedTasks - 1, halfOfSavedTasks);
 
-		assertThat(savedTasks.getSize()).isEqualTo(2);
+		Page<TaskDto.Response> response = taskService.findAll(pageRequest);
+
+		assertThat(response.getSize()).isEqualTo(halfOfSavedTasks);
 	}
 
 	@Test
 	public void findById() {
-		Long id = savedTasks.get(0).getId();
+		Long id = CHORE.getId();
 
 		TaskDto.Response response = taskService.findById(id);
 
@@ -100,5 +106,21 @@ public class TaskServiceTest {
 	@Test(expected = NotFoundTaskException.class)
 	public void findByIdExceptionWhenTaskNotExists() {
 		taskService.findById(Long.MAX_VALUE);
+	}
+
+	@Test
+	public void complete() {
+		Long id = CLEANING_ROOM.getId();
+
+		boolean isCompleted = taskService.complete(id);
+
+		assertThat(isCompleted).isTrue();
+	}
+
+	@Test(expected = CannotCompleteTaskException.class)
+	public void notCompleteWhenRelatedTaskExists() {
+		Long id = CHORE.getId();
+
+		taskService.complete(id);
 	}
 }

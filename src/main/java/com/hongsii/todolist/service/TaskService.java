@@ -1,7 +1,6 @@
 package com.hongsii.todolist.service;
 
 import com.hongsii.todolist.domain.Task;
-import com.hongsii.todolist.exception.NotFoundRelatedTaskException;
 import com.hongsii.todolist.exception.NotFoundTaskException;
 import com.hongsii.todolist.repository.TaskRepository;
 import com.hongsii.todolist.service.dto.TaskDto;
@@ -28,7 +27,7 @@ public class TaskService {
 	private void createRelatedTasks(TaskDto.Create request, Task task) {
 		for (Long relatedTaskId : request.getRelatedTaskIds()) {
 			Task savedRelatedTask = taskRepository.findById(relatedTaskId)
-					.orElseThrow(NotFoundRelatedTaskException::new);
+					.orElseThrow(() -> new NotFoundTaskException(relatedTaskId));
 
 			task.addRelatedTask(savedRelatedTask);
 		}
@@ -45,5 +44,12 @@ public class TaskService {
 		return taskRepository.findById(id)
 				.map(TaskDto.Response::of)
 				.orElseThrow(NotFoundTaskException::new);
+	}
+
+	@Transactional
+	public boolean complete(Long id) {
+		Task target = taskRepository.findById(id)
+				.orElseThrow(NotFoundTaskException::new);
+		return target.complete();
 	}
 }

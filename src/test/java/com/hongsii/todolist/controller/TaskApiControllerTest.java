@@ -3,6 +3,7 @@ package com.hongsii.todolist.controller;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -20,6 +21,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -63,7 +67,61 @@ public class TaskApiControllerTest {
 		);
 
 		result.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.data.id").value(4))
+				.andExpect(jsonPath("$.data.task.id").value(4))
+				.andDo(print());
+	}
+
+	@Test
+	public void findAll() throws Exception {
+		Page<TaskDto.Response> response = new PageImpl(
+				asList(
+						Response.builder()
+								.id(3L)
+								.content("청소")
+								.createdDate(parseDate("2018-04-01 12:00:00"))
+								.modifiedDate(parseDate("2018-04-01 13:00:00"))
+								.relatedTaskIds(asList(1L))
+								.build(),
+						Response.builder()
+								.id(4L)
+								.content("방청소")
+								.createdDate(parseDate("2018-04-01 12:00:00"))
+								.modifiedDate(parseDate("2018-04-01 13:00:00"))
+								.relatedTaskIds(asList(1L, 3L))
+								.build()
+				)
+		);
+		given(taskService.findAll(any(Pageable.class))).willReturn(response);
+
+		ResultActions result = mockMvc.perform(get("/api/tasks")
+				.param("page", "2")
+				.param("size", "2")
+		);
+
+		result.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.tasks.content.length()").value(2))
+				.andDo(print());
+	}
+
+	private LocalDateTime parseDate(String rawDate) {
+		return LocalDateTime.parse(rawDate, DATE_FORMATTER);
+	}
+
+	@Test
+	public void findById() throws Exception {
+		Response response = Response.builder()
+				.id(3L)
+				.content("청소")
+				.createdDate(parseDate("2018-04-01 12:00:00"))
+				.modifiedDate(parseDate("2018-04-01 13:00:00"))
+				.relatedTaskIds(asList(1L))
+				.build();
+		given(taskService.findById(any(Long.class))).willReturn(response);
+
+		ResultActions result = mockMvc.perform(get("/api/tasks/3"));
+
+		result.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.task.id").value(3))
 				.andDo(print());
 	}
 }

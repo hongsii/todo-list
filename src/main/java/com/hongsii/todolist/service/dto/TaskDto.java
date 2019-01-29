@@ -3,6 +3,7 @@ package com.hongsii.todolist.service.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hongsii.todolist.domain.Task;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotEmpty;
@@ -11,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Page;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaskDto {
@@ -27,6 +29,13 @@ public class TaskDto {
 			return Task.builder()
 					.content(content)
 					.build();
+		}
+
+		public List<Long> getRelatedTaskIds() {
+			if (relatedTaskIds == null) {
+				return Collections.emptyList();
+			}
+			return relatedTaskIds;
 		}
 	}
 
@@ -63,6 +72,26 @@ public class TaskDto {
 							.collect(Collectors.toList())
 					)
 					.build();
+		}
+	}
+
+	@Getter
+	public static class ResponseOne {
+
+		private Response task;
+
+		public ResponseOne(Response task) {
+			this.task = task;
+		}
+	}
+
+	@Getter
+	public static class ResponsePage {
+
+		private Page<Response> tasks;
+
+		public ResponsePage(Page<Response> tasks) {
+			this.tasks = tasks;
 		}
 	}
 }

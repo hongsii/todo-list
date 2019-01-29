@@ -17,11 +17,14 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Singular;
+import lombok.ToString;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(of = "id", callSuper = false)
+@ToString
 public class Task extends BaseEntity {
 
 	@Id
@@ -38,13 +41,14 @@ public class Task extends BaseEntity {
 			@JoinColumn(name = "task_id", referencedColumnName = "id", nullable = false)},
 			inverseJoinColumns = {
 			@JoinColumn(name = "related_task_id", referencedColumnName = "id", nullable = false)})
-	private List<Task> relatedTasks = new ArrayList<>();
+	@Singular
+	private List<Task> relatedTasks;
 
 	@Builder
 	public Task(Long id, String content, List<Task> relatedTasks) {
 		this.id = id;
 		this.content = content;
-		this.relatedTasks = relatedTasks;
+		this.relatedTasks = (relatedTasks != null) ? relatedTasks:new ArrayList<>();
 	}
 
 	public void addRelatedTask(Task relatedTask) {

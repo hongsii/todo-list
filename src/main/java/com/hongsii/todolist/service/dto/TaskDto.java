@@ -5,7 +5,6 @@ import com.hongsii.todolist.domain.Task;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotEmpty;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,7 +22,7 @@ public class TaskDto {
 
 		@NotEmpty
 		private String content;
-		private List<Long> relatedTaskIds;
+		private List<Long> superTaskIds;
 
 		public Task toEntity() {
 			return Task.builder()
@@ -31,11 +30,21 @@ public class TaskDto {
 					.build();
 		}
 
-		public List<Long> getRelatedTaskIds() {
-			if (relatedTaskIds == null) {
-				return Collections.emptyList();
-			}
-			return relatedTaskIds;
+		public List<Long> getSuperTaskIds() {
+			return superTaskIds != null ? superTaskIds : Collections.emptyList();
+		}
+	}
+
+	@Getter
+	@Setter
+	public static class Update {
+
+		@NotEmpty
+		private String content;
+		private boolean isCompleted;
+
+		public Task apply(Task task) {
+			return task.update(content, isCompleted);
 		}
 	}
 
@@ -49,16 +58,18 @@ public class TaskDto {
 		private LocalDateTime createdDate;
 		@JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
 		private LocalDateTime modifiedDate;
-		private List<Long> relatedTaskIds;
+		private List<Long> superTaskIds;
+		private boolean isCompleted;
 
 		@Builder
 		public Response(Long id, String content, LocalDateTime createdDate,
-				LocalDateTime modifiedDate, List<Long> relatedTaskIds) {
+				LocalDateTime modifiedDate, List<Long> superTaskIds, boolean isCompleted) {
 			this.id = id;
 			this.content = content;
 			this.createdDate = createdDate;
 			this.modifiedDate = modifiedDate;
-			this.relatedTaskIds = relatedTaskIds;
+			this.superTaskIds = superTaskIds;
+			this.isCompleted = isCompleted;
 		}
 
 		public static Response of(Task task) {
@@ -67,10 +78,8 @@ public class TaskDto {
 					.content(task.getContent())
 					.createdDate(task.getCreatedDate())
 					.modifiedDate(task.getModifiedDate())
-					.relatedTaskIds(task.getRelatedTasks().stream()
-							.map(Task::getId)
-							.collect(Collectors.toList())
-					)
+					.superTaskIds(task.getTaskRelation().getSuperTaskIds())
+					.isCompleted(task.isCompleted())
 					.build();
 		}
 	}

@@ -4,6 +4,7 @@ import com.hongsii.todolist.domain.Task;
 import com.hongsii.todolist.exception.NotFoundTaskException;
 import com.hongsii.todolist.repository.TaskRepository;
 import com.hongsii.todolist.service.dto.TaskDto;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,16 +21,15 @@ public class TaskService {
 	public TaskDto.Response create(TaskDto.Create request) {
 		Task target = request.toEntity();
 		Task created = taskRepository.save(target);
-		createRelatedTasks(request, created);
+		addSuperTasks(request.getSuperTaskIds(), created);
 		return TaskDto.Response.of(created);
 	}
 
-	private void createRelatedTasks(TaskDto.Create request, Task task) {
-		for (Long relatedTaskId : request.getRelatedTaskIds()) {
-			Task savedRelatedTask = taskRepository.findById(relatedTaskId)
-					.orElseThrow(() -> new NotFoundTaskException(relatedTaskId));
-
-			task.addRelatedTask(savedRelatedTask);
+	private void addSuperTasks(List<Long> superTaskIds, Task target) {
+		for (Long superTaskId : superTaskIds) {
+			Task superTask = taskRepository.findById(superTaskId)
+					.orElseThrow(() -> new NotFoundTaskException(superTaskId));
+			target.addSuperTask(superTask);
 		}
 	}
 
@@ -51,5 +51,13 @@ public class TaskService {
 		Task target = taskRepository.findById(id)
 				.orElseThrow(NotFoundTaskException::new);
 		return target.complete();
+	}
+
+	@Transactional
+	public TaskDto.Response update(Long id, TaskDto.Update update) {
+		Task updated = taskRepository.findById(id)
+				.map(update::apply)
+				.orElseThrow(NotFoundTaskException::new);
+		return TaskDto.Response.of(updated);
 	}
 }

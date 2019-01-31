@@ -2,17 +2,12 @@ package com.hongsii.todolist.domain;
 
 import com.hongsii.todolist.exception.AlreadyCompletedTaskException;
 import com.hongsii.todolist.exception.CannotCompleteTaskException;
-import com.hongsii.todolist.exception.DuplicateRelatedTaskException;
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -36,50 +31,39 @@ public class Task extends BaseEntity {
 	@Size(max = 30)
 	private String content;
 
-	@ManyToMany
-	@JoinTable(name = "task_relation",
-			joinColumns = {
-					@JoinColumn(name = "task_id", referencedColumnName = "id", nullable = false)},
-			inverseJoinColumns = {
-					@JoinColumn(name = "related_task_id", referencedColumnName = "id", nullable = false)})
-	private List<Task> relatedTasks;
-
-	@ManyToMany(mappedBy = "relatedTasks")
-	private List<Task> relatedByTasks;
+	@Embedded
+	private TaskRelation taskRelation;
 
 	@Column
 	private boolean isCompleted;
 
 	@Builder
-	public Task(Long id, String content, List<Task> relatedTasks, List<Task> relatedByTasks, boolean isCompleted) {
+	public Task(Long id, String content, TaskRelation taskRelation, boolean isCompleted) {
 		this.id = id;
 		this.content = content;
-		this.relatedTasks = (relatedTasks != null) ? relatedTasks:new ArrayList<>();
-		this.relatedByTasks = (relatedByTasks != null) ? relatedByTasks:new ArrayList<>();
+		this.taskRelation = taskRelation != null ? taskRelation:TaskRelation.builder().build();
 		this.isCompleted = isCompleted;
-	}
-
-	public void addRelatedTask(Task relatedTask) {
-		if (relatedTasks.contains(relatedTask)) {
-			throw new DuplicateRelatedTaskException();
-		}
-		relatedTasks.add(relatedTask);
-	}
-
-	public boolean isAllCompletedRelatedTask() {
-		long completedRelatedTaskCount = relatedByTasks.stream()
-				.filter(Task::isCompleted)
-				.count();
-		return relatedByTasks.size() == completedRelatedTaskCount;
 	}
 
 	public boolean complete() {
 		if (isCompleted) {
 			throw new AlreadyCompletedTaskException("이미 완료된 작업입니다.");
 		}
-		if (!isAllCompletedRelatedTask()) {
-			throw new CannotCompleteTaskException("참조 중인 작업이 완료되지 않았습니다.");
+		if (!taskRelation.isAllCompletedSubTasks()) {
+			throw new CannotCompleteTaskException("하위 작업이 모두 완료되지 않았습니다.");
 		}
 		return isCompleted = true;
+	}
+
+	public Task update(String content, boolean isCompleted) {
+		this.content = content;
+		if (isCompleted) {
+			complete();
+		}
+		return this;
+	}
+
+	public void addSuperTask(Task task) {
+		taskRelation.addSuperTask(task);
 	}
 }

@@ -9,6 +9,6 @@ public class NotFoundTaskException extends RuntimeException {
 	}
 
 	public NotFoundTaskException(Long id) {
-		super(DEFAULT_MESSAGE + " - id : " +id);
+		super(DEFAULT_MESSAGE + "[id=" + id + "]");
 	}
 }

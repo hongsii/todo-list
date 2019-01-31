@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hongsii.todolist.domain.Task;
+import com.hongsii.todolist.domain.TaskRelation;
 import com.hongsii.todolist.exception.CannotCompleteTaskException;
 import com.hongsii.todolist.exception.NotFoundTaskException;
 import com.hongsii.todolist.repository.TaskRepository;
@@ -38,10 +39,11 @@ public class TaskServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		CHORE = taskRepository.save(Task.builder().content("집안일").build());
-		LAUNDRY = taskRepository.save(Task.builder().content("빨래").relatedTasks(asList(CHORE)).build());
-		CLEANING = taskRepository.save(Task.builder().content("청소").relatedTasks(asList(CHORE)).build());
-		CLEANING_ROOM = taskRepository.save(Task.builder().content("방청소").relatedTasks(asList(
-				CHORE, CLEANING)).build());
+		TaskRelation ONE_RELATION = TaskRelation.builder().superTasks(asList(CHORE)).build();
+		LAUNDRY = taskRepository.save(Task.builder().content("빨래").taskRelation(ONE_RELATION).build());
+		CLEANING = taskRepository.save(Task.builder().content("청소").taskRelation(ONE_RELATION).build());
+		TaskRelation TWO_RELATION = TaskRelation.builder().superTasks(asList(CHORE, CLEANING)).build();
+		CLEANING_ROOM = taskRepository.save(Task.builder().content("방청소").taskRelation(TWO_RELATION).build());
 		savedTasks = asList(CHORE, LAUNDRY, CLEANING, CLEANING_ROOM);
 	}
 
@@ -62,24 +64,23 @@ public class TaskServiceTest {
 	}
 
 	@Test
-	public void createWithRelatedTask() {
+	public void createWithSuperTask() {
 		TaskDto.Create request = new TaskDto.Create();
 		request.setContent("설거지");
-		Long relatedId1 = CHORE.getId(), relatedId2 = LAUNDRY.getId();
-		request.setRelatedTaskIds(asList(relatedId1, relatedId2));
+		request.setSuperTaskIds(asList(CHORE.getId(), LAUNDRY.getId()));
 
 		TaskDto.Response created = taskService.create(request);
 
 		assertThat(created.getId()).isNotNull();
-		assertThat(created.getRelatedTaskIds()).hasSize(2).isEqualTo(request.getRelatedTaskIds());
+		assertThat(created.getSuperTaskIds()).hasSize(2).isEqualTo(request.getSuperTaskIds());
 		assertThat(taskRepository.count()).isEqualTo(savedTasks.size() + 1);
 	}
 
 	@Test(expected = NotFoundTaskException.class)
-	public void createExceptionWhenRelatedTaskNotExists() {
+	public void createExceptionWhenSuperTaskNotExists() {
 		TaskDto.Create request = new TaskDto.Create();
 		request.setContent("설거지");
-		request.setRelatedTaskIds(asList(Long.MAX_VALUE));
+		request.setSuperTaskIds(asList(Long.MAX_VALUE));
 
 		taskService.create(request);
 	}
@@ -118,9 +119,21 @@ public class TaskServiceTest {
 	}
 
 	@Test(expected = CannotCompleteTaskException.class)
-	public void notCompleteWhenRelatedTaskExists() {
+	public void notCompleteWhenSubTaskIsNotCompleted() {
 		Long id = CHORE.getId();
 
 		taskService.complete(id);
+	}
+
+	@Test
+	public void update() {
+		TaskDto.Update update = new TaskDto.Update();
+		update.setContent("방청소는 집에서");
+		update.setCompleted(true);
+
+		TaskDto.Response updated = taskService.update(CLEANING_ROOM.getId(), update);
+
+		assertThat(updated.getContent()).isEqualTo(update.getContent());
+		assertThat(updated.isCompleted()).isEqualTo(update.isCompleted());
 	}
 }

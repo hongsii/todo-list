@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,13 +54,13 @@ public class TaskApiControllerTest {
 				.content("방청소")
 				.createdDate(LocalDateTime.now())
 				.modifiedDate(LocalDateTime.now())
-				.relatedTaskIds(asList(1L, 3L))
+				.superTaskIds(asList(1L, 3L))
 				.build();
 		given(taskService.create(any(TaskDto.Create.class))).willReturn(response);
 
 		TaskDto.Create request = new TaskDto.Create();
-		request.setContent("집안일");
-		request.setRelatedTaskIds(asList(1L, 3L));
+		request.setContent("방청소");
+		request.setSuperTaskIds(asList(1L, 3L));
 
 		ResultActions result = mockMvc.perform(post("/api/tasks")
 				.content(objectMapper.writeValueAsString(request))
@@ -81,14 +82,14 @@ public class TaskApiControllerTest {
 								.content("청소")
 								.createdDate(parseDate("2018-04-01 12:00:00"))
 								.modifiedDate(parseDate("2018-04-01 13:00:00"))
-								.relatedTaskIds(asList(1L))
+								.superTaskIds(asList(1L))
 								.build(),
 						Response.builder()
 								.id(4L)
 								.content("방청소")
 								.createdDate(parseDate("2018-04-01 12:00:00"))
 								.modifiedDate(parseDate("2018-04-01 13:00:00"))
-								.relatedTaskIds(asList(1L, 3L))
+								.superTaskIds(asList(1L, 3L))
 								.build()
 				)
 		);
@@ -115,7 +116,7 @@ public class TaskApiControllerTest {
 				.content("청소")
 				.createdDate(parseDate("2018-04-01 12:00:00"))
 				.modifiedDate(parseDate("2018-04-01 13:00:00"))
-				.relatedTaskIds(asList(1L))
+				.superTaskIds(asList(1L))
 				.build();
 		given(taskService.findById(any(Long.class))).willReturn(response);
 
@@ -123,6 +124,32 @@ public class TaskApiControllerTest {
 
 		result.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data.task.id").value(3))
+				.andDo(print());
+	}
+
+	@Test
+	public void update() throws Exception {
+		Response response = Response.builder()
+				.id(3L)
+				.content("청소는 집에서")
+				.createdDate(parseDate("2018-04-01 12:00:00"))
+				.modifiedDate(parseDate("2018-04-01 13:00:00"))
+				.superTaskIds(asList(1L))
+				.isCompleted(false)
+				.build();
+		given(taskService.update(any(Long.class), any(TaskDto.Update.class)))
+				.willReturn(response);
+
+		TaskDto.Update update = new TaskDto.Update();
+		update.setContent("청소는 집에서");
+
+		ResultActions result = mockMvc.perform(put("/api/tasks/3")
+				.content(objectMapper.writeValueAsString(update))
+				.contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+				.accept(MediaType.APPLICATION_JSON_UTF8_VALUE)
+		);
+
+		result.andExpect(status().isOk())
 				.andDo(print());
 	}
 

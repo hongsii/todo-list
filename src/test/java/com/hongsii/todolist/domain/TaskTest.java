@@ -1,63 +1,27 @@
 package com.hongsii.todolist.domain;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.hongsii.todolist.domain.Task.TaskBuilder;
 import com.hongsii.todolist.exception.AlreadyCompletedTaskException;
 import com.hongsii.todolist.exception.CannotCompleteTaskException;
-import com.hongsii.todolist.exception.DuplicateRelatedTaskException;
-import java.util.List;
+import org.junit.Before;
 import org.junit.Test;
 
 public class TaskTest {
 
-	public static Task CHORES = Task.builder()
-			.id(1L)
-			.content("집안일")
-			.build();
+	private TaskBuilder DEFAULT_TASK_BUILDER;
 
-	@Test(expected = DuplicateRelatedTaskException.class)
-	public void addRelatedTask() {
-		Task task = Task.builder()
+	@Before
+	public void setUp() throws Exception {
+		DEFAULT_TASK_BUILDER = Task.builder()
 				.id(2L)
-				.content("청소")
-				.relatedTasks(asList(CHORES))
-				.build();
-		task.addRelatedTask(CHORES);
-	}
-
-	@Test
-	public void isRelatedByTask() {
-		List<Task> allCompletedTasks = createRelatedTask(true);
-		Task task = Task.builder()
-				.id(2L)
-				.content("청소")
-				.relatedByTasks(allCompletedTasks)
-				.build();
-
-		assertThat(task.isAllCompletedRelatedTask()).isTrue();
-	}
-
-	@Test
-	public void notRelatedByTask() {
-		List<Task> relatedByTasksIncludeNotCompleted = asList(
-				Task.builder().id(3L).content("빗질").isCompleted(true).build(),
-				Task.builder().id(4L).content("걸레질").isCompleted(false).build()
-		);
-		Task task = Task.builder()
-				.id(2L)
-				.content("청소")
-				.relatedByTasks(relatedByTasksIncludeNotCompleted)
-				.build();
-
-		assertThat(task.isAllCompletedRelatedTask()).isFalse();
+				.content("청소");
 	}
 
 	@Test
 	public void complete() {
-		Task task = Task.builder()
-				.id(2L)
-				.content("청소")
+		Task task = DEFAULT_TASK_BUILDER
 				.isCompleted(false)
 				.build();
 
@@ -68,9 +32,7 @@ public class TaskTest {
 
 	@Test(expected = AlreadyCompletedTaskException.class)
 	public void completedAlready() {
-		Task task = Task.builder()
-				.id(2L)
-				.content("청소")
+		Task task = DEFAULT_TASK_BUILDER
 				.isCompleted(true)
 				.build();
 
@@ -79,11 +41,8 @@ public class TaskTest {
 
 	@Test
 	public void completeWhenRelatedByTaskIsAllCompleted() {
-		List<Task> completedTask = createRelatedTask(true);
-		Task task = Task.builder()
-				.id(2L)
-				.content("청소")
-				.relatedByTasks(completedTask)
+		Task task = DEFAULT_TASK_BUILDER
+				.taskRelation(TaskRelationTest.ALL_COMPLETED_SUBTASK)
 				.build();
 
 		boolean isCompleted = task.complete();
@@ -92,21 +51,10 @@ public class TaskTest {
 	}
 
 	@Test(expected = CannotCompleteTaskException.class)
-	public void notCompleteWhenRelatedByTaskIsNotCompleted() {
-		List<Task> notCompletedTask = createRelatedTask(false);
-		Task task = Task.builder()
-				.id(2L)
-				.content("청소")
-				.relatedByTasks(notCompletedTask)
+	public void notCompleteWhenSubTaskIsNotCompleted() {
+		Task task = DEFAULT_TASK_BUILDER
+				.taskRelation(TaskRelationTest.NOT_COMPLETED_SUBTASK)
 				.build();
-
 		task.complete();
-	}
-
-	private List<Task> createRelatedTask(boolean isAllCompleted) {
-		return asList(
-				Task.builder().id(3L).content("빗질").isCompleted(isAllCompleted).build(),
-				Task.builder().id(4L).content("걸레질").isCompleted(isAllCompleted).build()
-		);
 	}
 }

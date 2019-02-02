@@ -64,6 +64,12 @@ public class Task extends BaseEntity {
 	}
 
 	public void addSuperTask(Task task) {
+		if (this.equals(task)) {
+			throw new IllegalStateException("현재 작업과 참조하려는 작업이 동일합니다.");
+		}
+		if (task.isCompleted) {
+			throw new IllegalStateException("완료된 작업은 참조할 수 없습니다.");
+		}
 		taskRelation.addSuperTask(task);
 	}
 }

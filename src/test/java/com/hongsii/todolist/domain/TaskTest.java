@@ -15,7 +15,7 @@ public class TaskTest {
 	@Before
 	public void setUp() throws Exception {
 		DEFAULT_TASK_BUILDER = Task.builder()
-				.id(2L)
+				.id(1L)
 				.content("청소");
 	}
 
@@ -40,7 +40,7 @@ public class TaskTest {
 	}
 
 	@Test
-	public void completeWhenRelatedByTaskIsAllCompleted() {
+	public void completeWhenAllOfSubTasksAreCompleted() {
 		Task task = DEFAULT_TASK_BUILDER
 				.taskRelation(TaskRelationTest.ALL_COMPLETED_SUBTASK)
 				.build();
@@ -56,5 +56,19 @@ public class TaskTest {
 				.taskRelation(TaskRelationTest.NOT_COMPLETED_SUBTASK)
 				.build();
 		task.complete();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void shouldNotAddSuperTaskItself() {
+		Task task = DEFAULT_TASK_BUILDER.build();
+
+		task.addSuperTask(task);
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void shouldNotAddAlreadyCompletedSuperTask() {
+		Task task = DEFAULT_TASK_BUILDER.build();
+
+		task.addSuperTask(Task.builder().id(2L).isCompleted(true).build());
 	}
 }

@@ -60,7 +60,6 @@ public class TaskServiceTest {
 		TaskDto.Response created = taskService.create(request);
 
 		assertThat(created.getId()).isNotNull();
-		assertThat(taskRepository.count()).isEqualTo(savedTasks.size() + 1);
 	}
 
 	@Test
@@ -73,7 +72,6 @@ public class TaskServiceTest {
 
 		assertThat(created.getId()).isNotNull();
 		assertThat(created.getSuperTaskIds()).hasSize(2).isEqualTo(request.getSuperTaskIds());
-		assertThat(taskRepository.count()).isEqualTo(savedTasks.size() + 1);
 	}
 
 	@Test(expected = NotFoundTaskException.class)

@@ -1,0 +1,41 @@
+POST {{base-url}}/api/tasks
+Content-Type: {{api-content-type}}
+
+{
+  "content" : "집안일"
+}
+
+###
+
+POST {{base-url}}/api/tasks
+Content-Type: {{api-content-type}}
+
+{
+  "content" : "청소",
+  "superTaskIds" : [1]
+}
+
+###
+
+GET {{base-url}}/api/tasks
+
+###
+
+GET {{base-url}}/api/tasks/1
+
+###
+
+PATCH {{base-url}}/api/tasks/1/complete
+Content-Type: {{api-content-type}}
+
+###
+
+PUT {{base-url}}/api/tasks/1
+Content-Type: {{api-content-type}}
+
+{
+  "content" : "집안일은 집에서",
+  "completed" : true
+}
+
+###

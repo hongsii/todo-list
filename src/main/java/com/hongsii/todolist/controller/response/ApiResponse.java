@@ -29,6 +29,12 @@ public class ApiResponse<T> {
 		this.data = data;
 	}
 
+	private ApiResponse(HttpStatus httpStatus, String message, T data) {
+		setStatusCode(httpStatus);
+		this.message = message;
+		this.data = data;
+	}
+
 	private void setStatusCode(HttpStatus httpStatus) {
 		statusCode = httpStatus.value();
 		message = httpStatus.getReasonPhrase();
@@ -48,5 +54,9 @@ public class ApiResponse<T> {
 
 	public static ApiResponse<String> of(HttpStatus httpStatus, Exception exception) {
 		return new ApiResponse<>(httpStatus, exception, "");
+	}
+
+	public static ApiResponse<String> badRequest(String message) {
+		return new ApiResponse<>(HttpStatus.BAD_REQUEST, message, "");
 	}
 }

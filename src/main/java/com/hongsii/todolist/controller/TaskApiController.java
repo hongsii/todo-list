@@ -5,7 +5,6 @@ import com.hongsii.todolist.service.TaskService;
 import com.hongsii.todolist.service.dto.TaskDto;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -29,22 +28,22 @@ public class TaskApiController {
 
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)
-	public ApiResponse<TaskDto.ResponseOne> create(@RequestBody @Valid TaskDto.Create request) {
+	public ApiResponse create(@RequestBody @Valid TaskDto.Create request) {
 		return ApiResponse.created(new TaskDto.ResponseOne(taskService.create(request)));
 	}
 
 	@GetMapping
-	public ApiResponse<Page<TaskDto.Response>> findAll(@PageableDefault Pageable pageable) {
+	public ApiResponse findAll(@PageableDefault Pageable pageable) {
 		return ApiResponse.ok(new TaskDto.ResponsePage(taskService.findAll(pageable)));
 	}
 
 	@GetMapping("{id}")
-	public ApiResponse<TaskDto.ResponseOne> findById(@PathVariable Long id) {
+	public ApiResponse findById(@PathVariable Long id) {
 		return ApiResponse.ok(new TaskDto.ResponseOne(taskService.findById(id)));
 	}
 
 	@PutMapping(value = "{id}", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ApiResponse<TaskDto.Response> update(@PathVariable Long id, @RequestBody @Valid TaskDto.Update update) {
+	public ApiResponse update(@PathVariable Long id, @RequestBody @Valid TaskDto.Update update) {
 		return ApiResponse.ok(new TaskDto.ResponseOne(taskService.update(id, update)));
 	}
 

@@ -65,4 +65,16 @@ public class TaskRelation {
 				.map(Task::getId)
 				.collect(Collectors.toList());
 	}
+
+	public void updateSuperTasks(List<Task> update) {
+		for (Task task : update) {
+			if (!superTasks.contains(task)) {
+				superTasks.add(task);
+			}
+		}
+	}
+
+	public void removeSuperTaskIfNotContainsIn(List<Task> update) {
+		superTasks.removeIf(task -> !update.contains(task));
+	}
 }

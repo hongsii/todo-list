@@ -5,6 +5,7 @@ import com.hongsii.todolist.exception.NotFoundTaskException;
 import com.hongsii.todolist.repository.TaskRepository;
 import com.hongsii.todolist.service.dto.TaskDto;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -58,6 +59,20 @@ public class TaskService {
 		Task updated = taskRepository.findById(id)
 				.map(update::apply)
 				.orElseThrow(NotFoundTaskException::new);
+		updateSuperTasks(update, updated);
 		return TaskDto.Response.of(updated);
+	}
+
+	private void updateSuperTasks(TaskDto.Update update, Task updated) {
+		List<Long> superTaskIds = update.getSuperTaskIds();
+		List<Task> savedSuperTasks = taskRepository.findAllById(superTaskIds);
+		if (superTaskIds.size() != savedSuperTasks.size()) {
+			List<Long> failedIds = superTaskIds.stream()
+					.filter(id -> !savedSuperTasks.stream().anyMatch(task -> task.isSameId(id)))
+					.collect(Collectors.toList());
+			throw new NotFoundTaskException(failedIds);
+		}
+
+		updated.updateSuperTasks(savedSuperTasks);
 	}
 }

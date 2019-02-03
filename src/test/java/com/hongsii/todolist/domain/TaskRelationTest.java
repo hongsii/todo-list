@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hongsii.todolist.exception.DuplicatedTaskException;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,7 +20,9 @@ public class TaskRelationTest {
 			))
 			.superTasks(new ArrayList<>(
 					asList(
-							Task.builder().id(4L).content("방청소").isCompleted(true).build()
+							Task.builder().id(4L).content("방청소").build(),
+							Task.builder().id(5L).content("화장실청소").build(),
+							Task.builder().id(6L).content("주방청소").build()
 					)
 			))
 			.build();
@@ -73,5 +76,43 @@ public class TaskRelationTest {
 		boolean isAllCompleted = taskRelation.isAllCompletedSubTasks();
 
 		assertThat(isAllCompleted).isFalse();
+	}
+
+	@Test
+	public void updateSuperTasksIfNotExist() {
+		taskRelation = TaskRelation.builder()
+				.superTasks(new ArrayList<>(
+						asList(
+								Task.builder().id(4L).content("방청소").build(),
+								Task.builder().id(5L).content("화장실청소").build()
+						)
+				))
+				.build();
+
+		List<Task> update = asList(
+				Task.builder().id(4L).build(),
+				Task.builder().id(7L).build()
+		);
+		taskRelation.updateSuperTasks(update);
+
+		assertThat(taskRelation.getSuperTaskIds()).hasSize(3).containsAnyOf(7L);
+	}
+
+	@Test
+	public void removeSuperTaskIfIdDoesNotContains() {
+		taskRelation = TaskRelation.builder()
+				.superTasks(new ArrayList<>(
+						asList(
+								Task.builder().id(4L).content("방청소").build(),
+								Task.builder().id(5L).content("화장실청소").build(),
+								Task.builder().id(6L).content("주방청소").build()
+						)
+				))
+				.build();
+
+		List<Task> update = asList(Task.builder().id(4L).build());
+		taskRelation.removeSuperTaskIfNotContainsIn(update);
+
+		assertThat(taskRelation.getSuperTaskIds()).hasSize(1).containsOnly(4L);
 	}
 }

@@ -128,10 +128,12 @@ public class TaskServiceTest {
 		TaskDto.Update update = new TaskDto.Update();
 		update.setContent("방청소는 집에서");
 		update.setCompleted(true);
+		update.setSuperTaskIds(asList(CHORE.getId(), LAUNDRY.getId()));
 
 		TaskDto.Response updated = taskService.update(CLEANING_ROOM.getId(), update);
 
 		assertThat(updated.getContent()).isEqualTo(update.getContent());
 		assertThat(updated.isCompleted()).isEqualTo(update.isCompleted());
+		assertThat(updated.getSuperTaskIds()).isEqualTo(update.getSuperTaskIds());
 	}
 }

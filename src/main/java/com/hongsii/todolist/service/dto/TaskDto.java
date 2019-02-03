@@ -5,7 +5,7 @@ import com.hongsii.todolist.domain.Task;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,7 +20,7 @@ public class TaskDto {
 	@Setter
 	public static class Create {
 
-		@NotEmpty
+		@Size(min = 1, max = 30)
 		private String content;
 		private List<Long> superTaskIds;
 
@@ -39,12 +39,17 @@ public class TaskDto {
 	@Setter
 	public static class Update {
 
-		@NotEmpty
+		@Size(min = 1, max = 30)
 		private String content;
+		private List<Long> superTaskIds;
 		private boolean isCompleted;
 
 		public Task apply(Task task) {
 			return task.update(content, isCompleted);
+		}
+
+		public List<Long> getSuperTaskIds() {
+			return superTaskIds != null ? superTaskIds : Collections.emptyList();
 		}
 	}
 

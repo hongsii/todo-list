@@ -1,10 +1,13 @@
 package com.hongsii.todolist.domain;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hongsii.todolist.domain.Task.TaskBuilder;
 import com.hongsii.todolist.exception.AlreadyCompletedTaskException;
 import com.hongsii.todolist.exception.CannotCompleteTaskException;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,5 +73,30 @@ public class TaskTest {
 		Task task = DEFAULT_TASK_BUILDER.build();
 
 		task.addSuperTask(Task.builder().id(2L).isCompleted(true).build());
+	}
+
+	@Test
+	public void updateSuperTasks() {
+		Task task = Task.builder()
+				.id(1L)
+				.taskRelation(TaskRelation.builder()
+						.superTasks(new ArrayList<>(
+								asList(
+										Task.builder().id(2L).build(),
+										Task.builder().id(3L).build()
+								)
+						))
+						.build()
+				)
+				.build();
+
+		List<Task> update = asList(
+				Task.builder().id(2L).build(),
+				Task.builder().id(4L).build()
+		);
+		task.updateSuperTasks(update);
+
+		assertThat(task.getTaskRelation().getSuperTaskIds())
+				.hasSize(2).containsExactly(2L, 4L);
 	}
 }

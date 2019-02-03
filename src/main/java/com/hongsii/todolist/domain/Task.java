@@ -2,13 +2,13 @@ package com.hongsii.todolist.domain;
 
 import com.hongsii.todolist.exception.AlreadyCompletedTaskException;
 import com.hongsii.todolist.exception.CannotCompleteTaskException;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -28,7 +28,6 @@ public class Task extends BaseEntity {
 	private Long id;
 
 	@Column
-	@Size(max = 30)
 	private String content;
 
 	@Embedded
@@ -71,5 +70,14 @@ public class Task extends BaseEntity {
 			throw new IllegalStateException("완료된 작업은 참조할 수 없습니다.");
 		}
 		taskRelation.addSuperTask(task);
+	}
+
+	public void updateSuperTasks(List<Task> update) {
+		taskRelation.updateSuperTasks(update);
+		taskRelation.removeSuperTaskIfNotContainsIn(update);
+	}
+
+	public boolean isSameId(Long id) {
+		return this.id.equals(id);
 	}
 }

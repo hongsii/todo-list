@@ -1,0 +1,53 @@
+thead th {
+  font-size: 0.95em;
+  padding: .6em !important;
+}
+tbody td {
+  font-size: 0.85em;
+  vertical-align: middle !important;
+  padding: .6em !important;
+}
+tbody td button {
+  font-size: 0.88em !important;
+}
+
+.nav-title {
+  font-size: 1.9em;
+}
+.nav-item-middle {
+  vertical-align: middle;
+  align-items: center;
+  display: flex;
+}
+.nav-link-gray {
+  color: #6c757d;
+}
+
+.alert {
+  position: fixed;
+  bottom: 0;
+  right: 1%;
+}
+.hide {
+  display: none;
+}
+
+.title {
+  display: initial;
+}
+.btn-right {
+  position: absolute;
+  right: 1em;
+  top: 50%;
+  transform: translate(0,-50%);
+}
+.btn-font-middle {
+  font-size: 0.75em !important;
+}
+
+.option-right {
+  text-align: right;
+}
+.option-right-items {
+  padding-right: 0.8em;
+}

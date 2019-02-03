@@ -114,13 +114,11 @@ public class TaskDto {
 	@Getter
 	public static class PageData {
 
-		private int number;
 		private int currentPage;
 		private int totalPages;
 
 		public PageData(Page<Response> page) {
-			this.number = page.getNumber();
-			this.currentPage = page.getPageable().getPageNumber();
+			this.currentPage = page.getNumber();
 			this.totalPages = page.getTotalPages();
 		}
 	}

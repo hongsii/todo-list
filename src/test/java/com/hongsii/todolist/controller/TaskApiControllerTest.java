@@ -96,12 +96,12 @@ public class TaskApiControllerTest {
 		given(taskService.findAll(any(Pageable.class))).willReturn(response);
 
 		ResultActions result = mockMvc.perform(get("/api/tasks")
-				.param("page", "2")
+				.param("page", "0")
 				.param("size", "2")
 		);
 
 		result.andExpect(status().isOk())
-				.andExpect(jsonPath("$.data.tasks.content.length()").value(2))
+				.andExpect(jsonPath("$.data.tasks.length()").value(2))
 				.andDo(print());
 	}
 

@@ -102,10 +102,26 @@ public class TaskDto {
 	@Getter
 	public static class ResponsePage {
 
-		private Page<Response> tasks;
+		private List<Response> tasks;
+		private PageData pageData;
 
 		public ResponsePage(Page<Response> tasks) {
-			this.tasks = tasks;
+			this.tasks = tasks.getContent();
+			this.pageData = new PageData(tasks);
+		}
+	}
+
+	@Getter
+	public static class PageData {
+
+		private int number;
+		private int currentPage;
+		private int totalPages;
+
+		public PageData(Page<Response> page) {
+			this.number = page.getNumber();
+			this.currentPage = page.getPageable().getPageNumber();
+			this.totalPages = page.getTotalPages();
 		}
 	}
 }

@@ -95,8 +95,8 @@ function loadTaskList(url) {
       console.group("TASK-RESPONSE");
       console.log(tasks);
       $("#task-list tbody").empty();
-      for (index in tasks.content) {
-        const task = tasks.content[index];
+      for (index in tasks) {
+        const task = tasks[index];
         console.log(task);
 
         const completeBtn = $('<button></button>').addClass('btn').attr('data-completed', task.completed).click(function() {
@@ -117,7 +117,7 @@ function loadTaskList(url) {
           .appendTo($("#task-list tbody"));
       }
       console.groupEnd();
-      pagination('#pagination', tasks)
+      pagination('#pagination', response.data.pageData)
     },
     error: function (response) {
       console.log(response);
@@ -133,11 +133,11 @@ function makeSuperTaskIds(superTaskIds) {
   return tag.length > 0 ? ' ' + tag.join(' '):'';
 }
 
-function pagination(paginationId, pagingData) {
+function pagination(paginationId, pageData) {
   $(paginationId).empty();
 
-  for (let pageNumber = 0; pageNumber < pagingData.totalPages; pageNumber++) {
-    var li = $('<li/>').addClass('page-item ' + ((pageNumber == pagingData.number) ? 'active' : ''))
+  for (let pageNumber = 0; pageNumber < pageData.totalPages; pageNumber++) {
+    var li = $('<li/>').addClass('page-item ' + ((pageNumber == pageData.currentPage) ? 'active' : ''))
       .click(function () {
         loadTaskList(makeTaskListURL(pageNumber));
       })
